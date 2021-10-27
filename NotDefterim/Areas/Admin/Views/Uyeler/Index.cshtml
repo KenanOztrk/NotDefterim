@@ -1,0 +1,50 @@
+﻿@using Microsoft.AspNetCore.Identity
+@model List<ApplicationUser>
+@inject UserManager<ApplicationUser> UserManager
+@{
+    ViewBag.Title = "Üyeler";
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>E-mail</th>
+            <th>Kayıt Zamanı</th>
+            <th>Aktif Mi?</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            bool aktifMi = !await UserManager.IsLockedOutAsync(user);
+            <tr>
+                <td>@user.Email</td>
+                <td>@user.RegisterationTime</td>
+                <td>
+                    <input type="checkbox" @(aktifMi ? "checked" : "") data-uye-durum-guncelle="@user.Id" data-bootstrap-switch />
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+        $("input[data-bootstrap-switch]").each(function () {
+            $(this).bootstrapSwitch({
+                state: $(this).prop('checked'),
+                onText: "Evet",
+                offText: "Hayır",
+                onColor: "success",
+                offColor: "danger",
+                onSwitchChange: function (event, state) {
+                    var chk = this;
+                    var uyeId = $(chk).data("uye-durum-guncelle");
+                    $.post("@Url.Action("DurumGuncelle", "Uyeler")", { kullaniciId: uyeId, aktifMi: state }, function (data) {
+                        toastr.success("Üye durumu güncellendi.");
+                    });
+                }
+            });
+        });
+    </script>
+}
